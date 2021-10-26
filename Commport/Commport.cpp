@@ -9,8 +9,8 @@
 #include <cstring>
 #include <condition_variable>
 
-bool g_isReaded = false;
-bool g_isReadErr = false;
+volatile bool g_isReaded = false;
+volatile bool g_isReadErr = false;
 std::mutex g_mtx;
 
 std::mutex g_lobalMutex;
@@ -84,8 +84,9 @@ CCommPort::eResult CCommPort::Read(std::vector<unsigned char> OUT &data, IN int 
                 size_t readSize = ::read(m_fd,data.data()+tmpSize,blockSize);
                 if(readSize == -1)
                     return READ_ERR;
-                tmpSize+=readSize;
-                if(tmpSize >= blockSize)
+                tmpSize += readSize;
+                blockSize -= readSize;
+                if(tmpSize >= data.size())
                     break;
             }
         }
@@ -147,7 +148,7 @@ void CCommPort::_fnRead()
         struct pollfd fds;
         fds.fd=m_fd;
         fds.events = POLLIN;
-        int result = poll(&fds, 1, 1000); //ожидаем 1000 мс
+        int result = poll(&fds, 1, 100); //ожидаем 100 мс
         if(result <= 0)
         {
             if(tryCount > 3)
@@ -176,8 +177,9 @@ void CCommPort::_fnRead()
                         break;
                     }
                     tmpSize+=readSize;
+                    m_readSize -= readSize;
                 }
-                if(tmpSize >= m_readSize)
+                if(tmpSize >= m_vreadData.size())
                 {
                     g_isReaded = true;
                     g_isReadErr = false;
