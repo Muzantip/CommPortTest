@@ -23,7 +23,7 @@ CCommPortBoost::eResult CCommPortBoost::Execute(const std::vector<unsigned char>
         m_data.resize(resultSize);
         _write(command);
         //предпологаем, что Run должен отработать как минимум 2 обработчика, запись и чтение
-        if(Run() < 2)
+        if(Run(timeout) < 2)
         {
             return ERR;
         }else
