@@ -131,6 +131,7 @@ CCommPort::eResult CCommPort::ExecuteRW(const std::vector<unsigned char> IN &ida
 
 void CCommPort::_fnRead()
 {
+    int tryCount = 0;// количество попыток, в случае таймаута
     for(;;)
     {
         if(g_isReaded)
@@ -146,9 +147,19 @@ void CCommPort::_fnRead()
         struct pollfd fds;
         fds.fd=m_fd;
         fds.events = POLLIN;
-        int result = poll(&fds, 1, 100); //ожидаем 100 мс
+        int result = poll(&fds, 1, 1000); //ожидаем 1000 мс
         if(result <= 0)
+        {
+            if(tryCount > 3)
+            {
+              g_isReaded = true;
+              g_isReadErr = true;
+              g_condition.notify_one();
+              tryCount = 0;
+            }else
+                tryCount++;
             continue;
+        }
         if(result > 0)
         {
             if(fds.revents & POLLIN)

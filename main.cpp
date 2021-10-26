@@ -5,7 +5,7 @@
 
 using namespace std;
 
-const std::string g_strPortName = "/dev/ttyUSB0";
+const std::string g_strPortName = "/dev/ttyUSB2";
 
 void lowLevelTest(CCommPort &port,std::vector<unsigned char> &command,std::vector<unsigned char> &data)
 {
