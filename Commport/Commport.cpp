@@ -7,10 +7,14 @@
 #include <mutex>
 #include <functional>
 #include <cstring>
+#include <condition_variable>
 
 bool g_isReaded = false;
 bool g_isReadErr = false;
 std::mutex g_mtx;
+
+std::mutex g_lobalMutex;
+std::condition_variable g_condition;
 
 CCommPort::CCommPort(const std::string &strPortName, const speed_t IN speed)
     : m_fd(-1)
@@ -106,7 +110,8 @@ CCommPort::eResult CCommPort::ExecuteRW(const std::vector<unsigned char> IN &ida
         m_readSize = readSize;
         for(;;)
         {
-            sleep(0);
+            std::unique_lock<std::mutex> lock(g_lobalMutex);
+            g_condition.wait(lock , []{return g_isReaded;} );
             if(g_isReaded == true)
             {
                 odata.assign(m_vreadData.begin(),m_vreadData.end());
@@ -156,6 +161,7 @@ void CCommPort::_fnRead()
                     {
                         g_isReaded = true;
                         g_isReadErr = true;
+                        g_condition.notify_one();
                         break;
                     }
                     tmpSize+=readSize;
@@ -164,6 +170,7 @@ void CCommPort::_fnRead()
                 {
                     g_isReaded = true;
                     g_isReadErr = false;
+                    g_condition.notify_one();
                 }
              }
         }

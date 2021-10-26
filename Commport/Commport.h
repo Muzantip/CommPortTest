@@ -27,7 +27,7 @@ public:
     eResult Read(std::vector<unsigned char> OUT &data, int IN blockSize, const int IN timeout = 1000);
     void Close();
 
-    //Пишем в одном потоке, читаем в другом котоке
+    //Пишем в одном потоке, читаем в другом потоке
     eResult ExecuteRW(const std::vector<unsigned char> IN &idata, std::vector<unsigned char> &odata, const int readSize);
 
 private://функции
