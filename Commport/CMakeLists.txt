@@ -18,8 +18,6 @@ add_library(${PROJECT_NAME}
     Commport.h
     CommportBoost.cpp
     CommportBoost.h
-    BoostSerial.cpp
-    BoostSerial.h
     )
 
 # Трассируем результаты поиска в консоль
