@@ -105,12 +105,12 @@ void CCommPort::Close()
 
 CCommPort::eResult CCommPort::ExecuteRW(const std::vector<unsigned char> IN &idata, std::vector<unsigned char> OUT &odata, const int readSize)
 {
-    std::thread m_readThread(std::bind(&CCommPort::_fnRead,this));
+    std::thread readThread(std::bind(&CCommPort::_fnRead,this));
 
-    BOOST_SCOPE_EXIT(&m_readThread){
-        if(m_readThread.joinable())
+    BOOST_SCOPE_EXIT(&readThread){
+        if(readThread.joinable())
         {
-             m_readThread.detach();
+             readThread.detach();
         }
     } BOOST_SCOPE_EXIT_END;
 
