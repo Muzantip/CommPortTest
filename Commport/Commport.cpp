@@ -4,7 +4,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <poll.h>
-#include <boost/scope_exit.hpp>
 #include <mutex>
 #include <functional>
 #include <cstring>
@@ -20,7 +19,7 @@ std::condition_variable g_condition;
 CCommPort::CCommPort(const std::string &strPortName, const speed_t IN speed)
     : m_fd(-1)
     , m_readSize(0)
-    //, m_readThread(std::bind(&CCommPort::_fnRead,this))
+    , m_readThread(std::bind(&CCommPort::_fnRead,this))
 {
     if(_connect(strPortName) != OK)
     {
@@ -31,10 +30,10 @@ CCommPort::CCommPort(const std::string &strPortName, const speed_t IN speed)
 CCommPort::~CCommPort()
 {
     Close();
-//    if(m_readThread.joinable())
-//     {
-//         m_readThread.detach();
-//     }
+    if(m_readThread.joinable())
+    {
+         m_readThread.detach();
+    }
 }
 
 CCommPort::eResult CCommPort::Write(const std::vector<unsigned char> IN &data)
@@ -105,24 +104,14 @@ void CCommPort::Close()
 
 CCommPort::eResult CCommPort::ExecuteRW(const std::vector<unsigned char> IN &idata, std::vector<unsigned char> OUT &odata, const int readSize)
 {
-    std::thread readThread(std::bind(&CCommPort::_fnRead,this));
-
-    BOOST_SCOPE_EXIT(&readThread){
-        if(readThread.joinable())
-        {
-             readThread.detach();
-        }
-    } BOOST_SCOPE_EXIT_END;
-
     eResult result = Write(idata);
     if(result == OK)
     {
         g_isReaded = false;
         m_readSize = readSize;
+        g_condition.notify_one();
         for(;;)
         {
-            std::unique_lock<std::mutex> lock(g_lobalMutex);
-            g_condition.wait(lock , []{return g_isReaded;} );
             if(g_isReaded == true)
             {
                 odata.assign(m_vreadData.begin(),m_vreadData.end());
@@ -145,10 +134,11 @@ void CCommPort::_fnRead()
     int tryCount = 0;// количество попыток, в случае таймаута
     for(;;)
     {
-        if(g_isReaded)
-            continue;
+        std::unique_lock<std::mutex> lock(g_lobalMutex);
+        g_condition.wait(lock , []{return !g_isReaded;} );
+         if(g_isReaded)
+             continue;
 
-        std::lock_guard<std::mutex> lock(g_mtx);
         if(m_vreadData.size() == 0)
             m_vreadData.resize(m_readSize);
 
@@ -165,7 +155,6 @@ void CCommPort::_fnRead()
             {
               g_isReaded = true;
               g_isReadErr = true;
-              g_condition.notify_one();
               tryCount = 0;
             }else
                 tryCount++;
@@ -183,7 +172,6 @@ void CCommPort::_fnRead()
                     {
                         g_isReaded = true;
                         g_isReadErr = true;
-                        g_condition.notify_one();
                         break;
                     }
                     tmpSize+=readSize;
@@ -193,7 +181,6 @@ void CCommPort::_fnRead()
                 {
                     g_isReaded = true;
                     g_isReadErr = false;
-                    g_condition.notify_one();
                 }
              }
         }

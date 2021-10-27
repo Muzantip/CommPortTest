@@ -35,7 +35,7 @@ private://функции
     eResult _fdIsValid();
 
     //Поток чтения данных
-  //  std::thread m_readThread;
+    std::thread m_readThread;
     void _fnRead();
     std::vector<unsigned char> m_vreadData;
     //Сколько байт надо читать
