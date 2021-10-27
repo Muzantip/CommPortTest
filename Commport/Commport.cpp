@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <poll.h>
+#include <boost/scope_exit.hpp>
 #include <mutex>
 #include <functional>
 #include <cstring>
@@ -19,7 +20,7 @@ std::condition_variable g_condition;
 CCommPort::CCommPort(const std::string &strPortName, const speed_t IN speed)
     : m_fd(-1)
     , m_readSize(0)
-    , m_readThread(std::bind(&CCommPort::_fnRead,this))
+    //, m_readThread(std::bind(&CCommPort::_fnRead,this))
 {
     if(_connect(strPortName) != OK)
     {
@@ -30,10 +31,10 @@ CCommPort::CCommPort(const std::string &strPortName, const speed_t IN speed)
 CCommPort::~CCommPort()
 {
     Close();
-    if(m_readThread.joinable())
-     {
-         m_readThread.detach();
-     }
+//    if(m_readThread.joinable())
+//     {
+//         m_readThread.detach();
+//     }
 }
 
 CCommPort::eResult CCommPort::Write(const std::vector<unsigned char> IN &data)
@@ -104,6 +105,15 @@ void CCommPort::Close()
 
 CCommPort::eResult CCommPort::ExecuteRW(const std::vector<unsigned char> IN &idata, std::vector<unsigned char> OUT &odata, const int readSize)
 {
+    std::thread m_readThread(std::bind(&CCommPort::_fnRead,this));
+
+    BOOST_SCOPE_EXIT(&m_readThread){
+        if(m_readThread.joinable())
+        {
+             m_readThread.detach();
+        }
+    } BOOST_SCOPE_EXIT_END;
+
     eResult result = Write(idata);
     if(result == OK)
     {
