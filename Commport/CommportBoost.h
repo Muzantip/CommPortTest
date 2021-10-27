@@ -7,6 +7,7 @@
 
 class CCommPortBoost
 {
+public:
     enum eResult
     {
       OK,           //Удачно

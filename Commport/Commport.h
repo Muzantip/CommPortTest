@@ -8,6 +8,7 @@
 
 class CCommPort
 {
+public:
     enum eResult
     {
       OK,           //Удачно

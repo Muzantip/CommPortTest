@@ -11,6 +11,7 @@
 
 volatile bool g_isReaded = false;
 volatile bool g_isReadErr = false;
+volatile bool g_readStop = false;
 std::mutex g_mtx;
 
 std::mutex g_lobalMutex;
@@ -29,11 +30,13 @@ CCommPort::CCommPort(const std::string &strPortName, const speed_t IN speed)
 
 CCommPort::~CCommPort()
 {
-    Close();
     if(m_readThread.joinable())
     {
-         m_readThread.detach();
+        g_readStop = true;
+        m_readThread.join();
+        g_readStop = false;
     }
+    Close();
 }
 
 CCommPort::eResult CCommPort::Write(const std::vector<unsigned char> IN &data)
@@ -109,9 +112,10 @@ CCommPort::eResult CCommPort::ExecuteRW(const std::vector<unsigned char> IN &ida
     {
         g_isReaded = false;
         m_readSize = readSize;
-        g_condition.notify_one();
         for(;;)
         {
+            std::unique_lock<std::mutex> lock(g_lobalMutex);
+            g_condition.wait(lock , []{return g_isReaded;} );
             if(g_isReaded == true)
             {
                 odata.assign(m_vreadData.begin(),m_vreadData.end());
@@ -131,11 +135,12 @@ CCommPort::eResult CCommPort::ExecuteRW(const std::vector<unsigned char> IN &ida
 
 void CCommPort::_fnRead()
 {
+
     int tryCount = 0;// количество попыток, в случае таймаута
     for(;;)
     {
-        std::unique_lock<std::mutex> lock(g_lobalMutex);
-        g_condition.wait(lock , []{return !g_isReaded;} );
+        if(g_readStop)
+            break;
          if(g_isReaded)
              continue;
 
@@ -156,6 +161,7 @@ void CCommPort::_fnRead()
               g_isReaded = true;
               g_isReadErr = true;
               tryCount = 0;
+              g_condition.notify_one();
             }else
                 tryCount++;
             continue;
@@ -172,6 +178,7 @@ void CCommPort::_fnRead()
                     {
                         g_isReaded = true;
                         g_isReadErr = true;
+                        g_condition.notify_one();
                         break;
                     }
                     tmpSize+=readSize;
@@ -181,10 +188,12 @@ void CCommPort::_fnRead()
                 {
                     g_isReaded = true;
                     g_isReadErr = false;
+                    g_condition.notify_one();
                 }
              }
         }
     }
+
 }
 
 CCommPort::eResult CCommPort::_connect(const std::string IN strPortName, const speed_t IN speed)

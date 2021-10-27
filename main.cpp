@@ -9,18 +9,30 @@ const std::string g_strPortName = "/dev/ttyUSB0";
 
 void lowLevelTest(CCommPort &port,std::vector<unsigned char> &command,std::vector<unsigned char> &data)
 {
-    port.Write(command);
-    port.Read(data,47);
+    if(port.Write(command) != CCommPort::OK)
+    {
+        std::cout<<__FUNCTION__<<"() Write Err"<<std::endl;
+    }
+    if(port.Read(data,47) != CCommPort::OK)
+    {
+        std::cout<<__FUNCTION__<<"() Read Err"<<std::endl;
+    }
 }
 
 void lowMultiThreadTest(CCommPort &port,std::vector<unsigned char> &command,std::vector<unsigned char> &data)
 {
-    port.ExecuteRW(command,data,47);
+    if(port.ExecuteRW(command,data,47) != CCommPort::OK)
+    {
+        std::cout<<__FUNCTION__<<"() Err"<<std::endl;
+    }
 }
 
 void BoostSerialPortTest(CCommPortBoost &port,std::vector<unsigned char> &command,std::vector<unsigned char> &data)
 {
-    port.Execute(command,data,47);
+    if(port.Execute(command,data,47) != CCommPortBoost::OK)
+    {
+        std::cout<<__FUNCTION__<<"() Err"<<std::endl;
+    }
 }
 
 static void BM_lowLevelTest(benchmark::State& state)
