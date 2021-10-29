@@ -18,6 +18,12 @@ add_library(${PROJECT_NAME}
     Commport.h
     CommportBoost.cpp
     CommportBoost.h
+    CommportMultiThread.cpp
+    CommportMultiThread.h
+    CommportNoValidate.cpp
+    CommportNoValidate.h
+    CommportNoValidateMultiThread.cpp
+    CommportNoValidateMultiThread.h
     )
 
 # Трассируем результаты поиска в консоль
