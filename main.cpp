@@ -10,9 +10,10 @@
 using namespace std;
 
 const std::string g_strPortName = "/dev/ttyUSB0";
-//std::vector<unsigned char> g_command = {0x02,0x03,0x06,0x37,0xfe,0xc7};
-const std::vector<unsigned char> g_command = {0x02,0x03,0x06,0x37,0xfe,0xc7,0x02,0x03,0x06,0x37,0xfe,0xc7,0x02,0x03,0x06,0x37,0xfe,0xc7,0x02,0x03,0x06,0x37,0xfe,0xc7
-                                       ,0x02,0x03,0x06,0x37,0xfe,0xc7,0x02,0x03,0x06,0x37,0xfe,0xc7,0x02,0x03,0x06,0x37,0xfe,0xc7,0x02,0x03,0x06,0x37,0xfe};
+std::vector<unsigned char> g_command = {0x02,0x03,0x06,0x37,0xfe,0xc7};
+//const std::vector<unsigned char> g_command = {0x02,0x03,0x06,0x37,0xfe,0xc7,0x02,0x03,0x06,0x37,0xfe,0xc7,0x02,0x03,0x06,0x37,0xfe,0xc7,0x02,0x03,0x06,0x37,0xfe,0xc7
+ //                                      ,0x02,0x03,0x06,0x37,0xfe,0xc7,0x02,0x03,0x06,0x37,0xfe,0xc7,0x02,0x03,0x06,0x37,0xfe,0xc7,0x02,0x03,0x06,0x37,0xfe};
+const int g_readDataSize = 47;
 
 void Test_Commport_Low(CCommPort &port,std::vector<unsigned char> &data)
 {
@@ -20,7 +21,7 @@ void Test_Commport_Low(CCommPort &port,std::vector<unsigned char> &data)
     {
         std::cout<<__FUNCTION__<<"() Write Err"<<std::endl;
     }
-    if(port.Read(data,47) != CCommPort::OK)
+    if(port.Read(data,g_readDataSize) != CCommPort::OK)
     {
         std::cout<<__FUNCTION__<<"() Read Err"<<std::endl;
     }
@@ -32,7 +33,7 @@ void Test_Commport_Low_No_Validate(CCommPortNoValidate &port,std::vector<unsigne
     {
         std::cout<<__FUNCTION__<<"() Write Err"<<std::endl;
     }
-    if(port.Read(data,47) != CCommPort::OK)
+    if(port.Read(data,g_readDataSize) != CCommPort::OK)
     {
         std::cout<<__FUNCTION__<<"() Read Err"<<std::endl;
     }
@@ -40,7 +41,7 @@ void Test_Commport_Low_No_Validate(CCommPortNoValidate &port,std::vector<unsigne
 
 void Test_Commport_Low_Multi_Thread(CCommPortMultiThread &port,std::vector<unsigned char> &data)
 {
-    if(port.Execute(g_command,data,47) != CCommPort::OK)
+    if(port.Execute(g_command,data,g_readDataSize) != CCommPort::OK)
     {
         std::cout<<__FUNCTION__<<"() Err"<<std::endl;
     }
@@ -48,7 +49,7 @@ void Test_Commport_Low_Multi_Thread(CCommPortMultiThread &port,std::vector<unsig
 
 void Test_Commport_Low_Multi_Thread_No_Validate(CCommPortNoValidateMultiThread &port,std::vector<unsigned char> &data)
 {
-    if(port.Execute(g_command,data,47) != CCommPort::OK)
+    if(port.Execute(g_command,data,g_readDataSize) != CCommPort::OK)
     {
         std::cout<<__FUNCTION__<<"() Err"<<std::endl;
     }
@@ -56,7 +57,7 @@ void Test_Commport_Low_Multi_Thread_No_Validate(CCommPortNoValidateMultiThread &
 
 void BoostSerialPortTest(CCommPortBoost &port,std::vector<unsigned char> &data)
 {
-    if(port.Execute(g_command,data,47) != CCommPortBoost::OK)
+    if(port.Execute(g_command,data,g_readDataSize) != CCommPortBoost::OK)
     {
         std::cout<<__FUNCTION__<<"() Err"<<std::endl;
     }
