@@ -65,11 +65,9 @@ void BoostSerialPortTest(CCommPortBoost &port,std::vector<unsigned char> &data)
     }
 }
 
-void Test_Easy(int fd)
+void Test_Easy(int fd,std::vector<unsigned char> &data)
 {//максимально простой тест, запись и чтение без всяких проверок
     int wSize = ::write(fd,g_command.data(),g_command.size());
-    std::vector<unsigned char> data;
-    data.resize(g_readDataSize);
     int rSize = ::read(fd,data.data(),g_readDataSize);
 }
 
@@ -78,10 +76,12 @@ static void BM_Test_Easy(benchmark::State& state)
     //Этот код НЕ измеряется BENCHMARK
     CCommPort port(g_strPortName);
     int fd = port.GetFD();
+    std::vector<unsigned char> data;
+    data.resize(g_readDataSize);
     //
     //Этот код изменяется BENCHMARK
     for(auto _ : state)
-        Test_Easy(fd);
+        Test_Easy(fd,data);
     //
 }
 
