@@ -62,7 +62,7 @@ CCommPort::eResult CCommPort::Read(std::vector<unsigned char> OUT &data, IN int 
             return TIMEOUT_ERR;
         if(result < 0)
             return READ_ERR;
-        if(result > 0)
+        if(result > 0 && (fds.events & POLLIN))
         {
             data.resize(blockSize);
             int tmpSize =0;
