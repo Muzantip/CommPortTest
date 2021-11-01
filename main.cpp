@@ -7,6 +7,8 @@
 #include <benchmark/benchmark.h>
 #include <ctime>
 
+#include <unistd.h>
+
 using namespace std;
 
 const std::string g_strPortName = "/dev/ttyUSB0";
@@ -61,6 +63,26 @@ void BoostSerialPortTest(CCommPortBoost &port,std::vector<unsigned char> &data)
     {
         std::cout<<__FUNCTION__<<"() Err"<<std::endl;
     }
+}
+
+void Test_Easy(int fd)
+{//максимально простой тест, запись и чтение без всяких проверок
+    int wSize = ::write(fd,g_command.data(),g_command.size());
+    std::vector<unsigned char> data;
+    data.resize(g_readDataSize);
+    int rSize = ::read(fd,data.data(),g_readDataSize);
+}
+
+static void BM_Test_Easy(benchmark::State& state)
+{
+    //Этот код НЕ измеряется BENCHMARK
+    CCommPort port(g_strPortName);
+    int fd = port.GetFD();
+    //
+    //Этот код изменяется BENCHMARK
+    for(auto _ : state)
+        Test_Easy(fd);
+    //
 }
 
 static void BM_Test_Commport_Low(benchmark::State& state)
@@ -122,6 +144,8 @@ static void BM_Test_Commport_Low_Multi_Thread_No_Validate(benchmark::State& stat
     //
 }
 
+
+BENCHMARK(BM_Test_Easy);
 BENCHMARK(BM_Test_Commport_Low);
 BENCHMARK(BM_Test_Commport_Low_No_Validate);
 BENCHMARK(BM_Test_Commport_Low_Multi_Thread);
