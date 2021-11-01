@@ -31,7 +31,7 @@ message("Boost include directory: " ${Boost_INCLUDE_DIRS})
 message("Boost library directory: " ${Boost_LIBRARY_DIRS})
 
 # Указываем подкаталог с Boost-ом, в котором нужно искать его include-файлы
-target_include_directories( ${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
+target_include_directories( ${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
 
 # Указываем нужные нам библиотеки Boost, которые были перечислены в find_package()
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
